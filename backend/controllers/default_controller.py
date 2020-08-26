@@ -14,6 +14,7 @@ from backend.models.register import Register  # noqa: E501
 from backend.models.roster_list_response import RosterListResponse  # noqa: E501
 from backend.models.v_card_response import VCardResponse  # noqa: E501
 from backend import util
+from backend.__main__ import db
 
 
 def get_articles():  # noqa: E501
@@ -24,6 +25,7 @@ def get_articles():  # noqa: E501
 
     :rtype: ArticlesResponse
     """
+
     return 'do some magic!'
 
 
