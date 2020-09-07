@@ -10,6 +10,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'my_precious_secret_key')
     DEBUG = False
+    domains = ['xmpp.ru', 'jabber.ru']
+    recaptcha_secret = os.getenv('RECAPTCHA_SECRET', 'XXX')
 
 
 class DevelopmentConfig(Config):
@@ -38,5 +40,10 @@ config_by_name = dict(
     test=TestingConfig,
     prod=ProductionConfig
 )
+
+
+def config():
+    return config_by_name[os.getenv('ENV') or 'dev']
+
 
 key = Config.SECRET_KEY

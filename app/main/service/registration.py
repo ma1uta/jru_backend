@@ -1,13 +1,15 @@
-from ..dto.common import ERR_INCOMPLETE_DATA, ERR_INVALID_JID, ERR_LOGIN_ALREADY_EXISTS
-from .common import ok, error
+from ..dto.common import ERR_INCOMPLETE_DATA
+from .common import ok, error, is_valid_jid
+from .disposable_email import is_disposable_email
+from .recaptcha import check_recaptcha
 
 from datetime import datetime, timedelta
 
 
 def register(data, ip):
     """Registration"""
-    if not data.hash and data.password:
-        return login(data)
+    if data.hash and data.password:
+        return register_flow(data, ip)
 
     if not (not data.captcha and data.login and (data.email or data.phone)):
         return error(ERR_INCOMPLETE_DATA)
@@ -15,56 +17,67 @@ def register(data, ip):
     if captcha_error:
         return error(captcha_error)
 
-    if not is_valid_jid(data.login):
-        return error(ERR_INVALID_JID)
+    jid_validation_error = is_valid_jid(data.login)
+    if not jid_validation_error:
+        return jid_validation_error
 
     email_error = is_disposable_email(data.email.lower())
-    if (email_error):
+    if email_error:
         return error(email_error)
 
-    jid_parts = data.login.split("@")
-    if len(jid_parts) != 2:
-        return error(ERR_INVALID_JID)
-
-    account_result = check_account(jid_parts[0], jid_parts[1])
-    if account_result.error:
-        return error(account_result.error)
-    if account_result.exists:
-        return error(ERR_LOGIN_ALREADY_EXISTS)
-
     expires = datetime.today() + timedelta(days=1)
+    token = login(data.login, expires)
+    url = ""
+    email_data = EmailData(
+        email=data.email,
+        token=token,
+        username=data.login,
+        link=url
+    )
+    send_email("register", email_data)
 
     return ok()
 
 
-def login(data):
-    if data.hash or data.password:
+def register_flow(data, ip):
+    if not data.hash or not data.password:
         return error(ERR_INCOMPLETE_DATA)
+
+    register_user(data.login, data.password, data.email, ip)
     return ok()
 
 
-def check_recaptcha(captcha, ip):
-    if ip == "1.1.1.1":
-        return ERR_INCOMPLETE_DATA
-    return None
+def register_user(username, password, email, ip):
+    pass
 
 
-def is_valid_jid(jid):
-    return False
+def login(username, expires):
+    return Token(token="", error_msg=None)
 
 
-def is_disposable_email(email):
-    return None
+def send_email(kind, data):
+    pass
 
 
-class AccountResult:
-    exists = False
+class Token:
+    token = None
     error = None
 
-    def __init__(self, exists, error_msg):
-        self.exists = exists
+    def __init__(self, token, error_msg):
+        self.token = token
         self.error = error_msg
 
 
-def check_account(username, domain):
-    return AccountResult(False, None)
+class EmailData:
+    to = None
+    login = None
+    subject = None
+    link = None
+
+    def __init__(self, email, username, subject, link):
+        self.to = email
+        self.login = email
+        self.subject = subject
+        self.link = link
+
+
