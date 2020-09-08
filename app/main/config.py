@@ -12,6 +12,8 @@ class Config:
     DEBUG = False
     domains = ['xmpp.ru', 'jabber.ru']
     recaptcha_secret = os.getenv('RECAPTCHA_SECRET', 'XXX')
+    email_sender = os.getenv('EMAIL_SENDER', 'admin@jabber.ru')
+    email_server = os.getenv('EMAIL_SERVER', 'localhost')
 
 
 class DevelopmentConfig(Config):

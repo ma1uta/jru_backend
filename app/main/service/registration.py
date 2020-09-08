@@ -1,9 +1,10 @@
-from ..dto.common import ERR_INCOMPLETE_DATA
+from datetime import datetime, timedelta
+
 from .common import ok, error, is_valid_jid
 from .disposable_email import is_disposable_email
+from .mailer import EmailData, send_email
 from .recaptcha import check_recaptcha
-
-from datetime import datetime, timedelta
+from ..dto.common import ERR_INCOMPLETE_DATA
 
 
 def register(data, ip):
@@ -30,11 +31,11 @@ def register(data, ip):
     url = ""
     email_data = EmailData(
         email=data.email,
-        token=token,
+        subject="Registration",
         username=data.login,
         link=url
     )
-    send_email("register", email_data)
+    send_email("register.txt", email_data)
 
     return ok()
 
@@ -55,10 +56,6 @@ def login(username, expires):
     return Token(token="", error_msg=None)
 
 
-def send_email(kind, data):
-    pass
-
-
 class Token:
     token = None
     error = None
@@ -66,18 +63,3 @@ class Token:
     def __init__(self, token, error_msg):
         self.token = token
         self.error = error_msg
-
-
-class EmailData:
-    to = None
-    login = None
-    subject = None
-    link = None
-
-    def __init__(self, email, username, subject, link):
-        self.to = email
-        self.login = email
-        self.subject = subject
-        self.link = link
-
-
